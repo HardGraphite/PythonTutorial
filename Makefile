@@ -1,5 +1,7 @@
 PANDOC ?= pandoc
-PANDOC_MD_TO_HTML_FLAGS = -f markdown -t html --standalone --number-sections
+PANDOC_MD_TO_HTML_FLAGS = \
+	-f markdown -t html --standalone --number-sections \
+	--lua-filter=tools/link_filter.lua
 
 BUILD_DIR ?= build
 
