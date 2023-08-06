@@ -5,6 +5,8 @@
 概括地说，
 装饰器装饰了函数定义语句（FunctionDef）和类定义（ClassDef）语句，
 是一个**用来对函数或类进行转换的函数**。
+从这个角度来看，Python 的装饰器类似于某些编程语言中的“宏”，
+而装饰器的执行就是宏展开的过程。
 
 下面是几个简单的例子：
 
@@ -67,7 +69,7 @@ Disassembly of <code object some_func at 0x7f6b76341d70, file "", line 2>:
 
 1. 取出函数对应的 `code` 对象（即函数体对应的字节码）
 2. 按照此对象创建新的函数对象
-3. 取出函数的名称（一个字符串）
+3. 找到函数的名称（一个字符串）
 4. 将新创建的函数对象保存为此名称所指示的全局变量
 
 以上步骤可以表示为这样的伪代码：
@@ -80,11 +82,11 @@ func = __make_function_from_code__(code)
 # 3.
 name = 'some_func'
 # 4.
-setattr(name, func)
+setattr(namespace, name, func)
 
 # or ...
 
-setattr('some_func', __make_func_at__(0x7f6b76341d70))
+setattr(namespace, 'some_func', __make_func_at__(0x7f6b76341d70))
 ```
 
 可以看到，创建函数（1和2）和保存为变量（3和4）是分开的两步。
@@ -102,11 +104,11 @@ func = decorator(func)
 # 3.
 name = 'some_func'
 # 4.
-setattr(name, func)
+setattr(namespace, name, func)
 
 # or ...
 
-setattr('some_func', decorator(__make_func_at__(0x7f6b76341d70)))
+setattr(namespace, 'some_func', decorator(__make_func_at__(0x7f6b76341d70)))
 ```
 
 来看一下使用转换器后的字节码长什么样：
@@ -157,7 +159,7 @@ Disassembly of <code object some_func at 0x7f6b76342c70, file "", line 2>:
 
 ### 基本的装饰器
 
-下面这个装饰器 `time_func` 可以在函数执行前后打印信息
+下面这个装饰器 `verbose_call` 可以在函数执行前后打印信息
 （函数 `repr_func_args` 与装饰器的教学无关，故独立出来，以便理解）：
 
 ```python
@@ -172,7 +174,7 @@ def repr_func_args(args, kwargs) -> str:
     else:
         return kwargs_repr
 
-def time_func(func):
+def verbose_call(func):
     """A decorator to print calls to a function."""
     def _wrapper(*args, **kwargs):
         name = func.__name__
@@ -186,11 +188,11 @@ def time_func(func):
 来试一下：
 
 ```python
-@time_func
+@verbose_call
 def my_add(lhs, rhs):
     return lhs + rhs
 
-@time_func
+@verbose_call
 def my_mul(lhs, rhs):
     return lhs * rhs
 
@@ -211,13 +213,13 @@ my_mul returned 8.5094
 可以参照前文对装饰器的伪代码表示：
 
 > ```python
-> setattr('some_func', decorator(__make_func_at__(0x7f6b76341d70)))
+> setattr(namespace, 'some_func', decorator(__make_func_at__(0x7f6b76341d70)))
 > ```
 
 在这里，我们将具体内容填进去，就是：
 
 ```python
-# @time_func
+# @verbose_call
 # def my_add(lhs, rhs):
 #     return lhs + rhs
 
@@ -227,7 +229,7 @@ my_mul returned 8.5094
 def my_add(lhs, rhs):
     return lhs + rhs
 
-my_add = time_func(my_add)
+my_add = verbose_call(my_add)
 ```
 
 即，首先定义了函数原本的样子，再应用装饰器，把函数进行转换，用其结果覆盖原先的定义。
@@ -294,7 +296,7 @@ Hello, Linux!
 可以参照上一部分对简单装饰器的展开：
 
 > ```python
-> # @time_func
+> # @verbose_call
 > # def my_add(lhs, rhs):
 > #     return lhs + rhs
 >
@@ -304,7 +306,7 @@ Hello, Linux!
 > def my_add(lhs, rhs):
 >     return lhs + rhs
 >
-> my_add = time_func(my_add)
+> my_add = verbose_call(my_add)
 > ```
 
 本部分的装饰器变成了一个函数调用，
