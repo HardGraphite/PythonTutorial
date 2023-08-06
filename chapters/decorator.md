@@ -230,7 +230,7 @@ def my_add(lhs, rhs):
 my_add = time_func(my_add)
 ```
 
-即，首先定义了函数原本的样子，再应用装饰器，把函数进行转换，用将结果覆盖原先的定义。
+即，首先定义了函数原本的样子，再应用装饰器，把函数进行转换，用其结果覆盖原先的定义。
 
 ### 带有参数的装饰器
 
@@ -270,7 +270,13 @@ def code_for_darwin():
 
 try:
     code_for_linux()
+except:
+    pass
+try:
     code_for_windows()
+except:
+    pass
+try:
     code_for_darwin()
 except:
     pass
